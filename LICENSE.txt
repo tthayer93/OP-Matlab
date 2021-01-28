@@ -1,0 +1,4 @@
+All rights reserved by Author.
+
+The software is provided "as is" without any kind of warranty, expressed or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, and noninfringement.
+The Author shall not be liable for any claim, damages, or other liability in for any event, whether in action of contract, tort or otherwise, arising from, out of, or in connection with the software, the use of, or other dealings in the software.

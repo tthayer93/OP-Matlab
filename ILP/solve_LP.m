@@ -20,24 +20,26 @@ function [x_opt] = solve_LP(f, a, b, a_eq, b_eq, lb, ub, linprog_options)
 %TODO: Not tested with mac or windows, not tested with gurobi
 
 	%% Check for other solvers
+	no_other_solver = 0;
+	[cplex_flag, cplex_path] = system('command -v cplex');
+	[gurobi_flag, gurobi_path] = system('command -v gurobi');
+	[scip_flag, scip_path] = system('command -v scip');
+	scip_flag = scip_flag | ~exist('SaveMPS') | ~exist('BuildMPS') | ~exist('read_cplexsol');
 	if exist('linprog_options') && ~isempty(linprog_options)
 		no_other_solver = 1;
 	else
 		linprog_options = optimoptions(@linprog, 'Preprocess', 'none', 'Display', 'off', 'MaxIter', 10*(size(b,2) + size(b_eq,2) + size(a,2)));
 	end
-	[cplex_flag, cplex_path] = system('command -v cplex');
-	[gurobi_flag, gurobi_path] = system('command -v gurobi');
-	[scip_flag, scip_path] = system('command -v scip');
-	scip_flag = scip_flag | ~exist('SaveMPS') | ~exist('BuildMPS') | ~exist('read_cplexsol');
+	no_other_solver = no_other_solver || any([~cplex_flag, ~gurobi_flag, ~scip_flag]);
 	%% Solve LP with best found solver
 	warning('off','all');
-	if cplex_flag == 0
+	if cplex_flag == 0 && (no_other_solver == 0)
 		%addpath('/opt/ibm/ILOG/CPLEX_Studio1271/cplex/matlab/x86-64_linux');
 		cplex_path = split(cplex_path, 'bin');
 		cplex_path = cplex_path{1};
 		addpath([cplex_path(1:end-1), '/matlab/x86-64_linux']);
 		x_opt = cplexlp(f, a, b, a_eq, b_eq, lb, ub);
-	elseif gurobi_flag == 0
+	elseif gurobi_flag == 0 && (no_other_solver == 0)
 		gurobi_path = split(gurobi_path, 'bin');
 		gurobi_path = gurobi_path{1};
 		addpath([gurobi_path(1:end-1), '/examples/matlab']);
@@ -45,7 +47,7 @@ function [x_opt] = solve_LP(f, a, b, a_eq, b_eq, lb, ub, linprog_options)
 		if any(exit_flag == [-2:0])
 			error('Linprog was not successful. Check inputs.');
 		end
-	elseif scip_flag == 0
+	elseif scip_flag == 0 && (no_other_solver == 0)
 		SaveMPS("lp.mps", BuildMPS(a, b, a_eq, b_eq, f, lb, ub));
 		system('scip -c "read $PWD/lp.mps optimize write solution $PWD/lp.sol quit" > $PWD/lp.log');
 		x_opt = import_SOL_LP('lp.sol');

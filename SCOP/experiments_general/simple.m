@@ -1,3 +1,11 @@
+%SIMPLE Run the SCOP algorithm on a simple randomized dataset
+%
+%	Version: 1.0
+%	Date: 01/26/2021
+%	Author: Thomas Thayer (tthayer@ucmerced.edu)
+%
+%	This script showcases the simple version of the SCOP method, without clustering and on a randomized dataset, first presented in https://ieeexplore.ieee.org/document/9340899
+
 %% Initialize
 clear all;
 close all hidden;

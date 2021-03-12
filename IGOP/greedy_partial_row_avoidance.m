@@ -12,6 +12,7 @@ function [ total_cost, total_reward, tour, avoidance_map ] = greedy_partial_row_
 %		Vine rows are equally spaced, and each vine within a row is equally spaced.
 %		The agent is allowed to turn around within a row, to access only some of the rewards within it
 %		The vine_distance and row_distance are equal to 1 (if this is not the case, using avoidance_map as input or output will not be accurate)
+%		Only one robot is allowed within a row at a time
 %	Inputs:
 %		vine_distance: The distance between each vine in the rows, which is used as the movement cost between them
 %		row_distance: The distance between each row of vines, which is used as the movement cost between them

@@ -45,8 +45,7 @@ function [ total_cost, total_reward, tour ] = greedy_partial_row_heuristic( vine
             cumulative_cost_1(i, j) = (j - 1) * vine_distance;
             cumulative_cost_2(i, size_column - j + 1) = (j - 1) * vine_distance;
         end
-    end
-
+	end
     %% Find path
     while sum(sum(cumulative_reward_1)) > 0 || sum(sum(cumulative_reward_2)) > 0
 		%% Left side (column 1)
@@ -214,8 +213,7 @@ function [ total_cost, total_reward, tour ] = greedy_partial_row_heuristic( vine
         for i=current_row:derp:ending_row
             tour = [tour; (i-1)*size_column+1];
 		end
-    end
-
+	end
     %% Eliminate duplicates
     i = 2;
     while i <= length(tour)

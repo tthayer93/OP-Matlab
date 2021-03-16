@@ -1,14 +1,14 @@
-function [ vertex_table, edge_list, dist_list, rewards, reward_map, row_distance, vine_distance ] = build_vineyard_graph( vine1_lat, vine1_long, vineEnd_lat, vineEnd_long, num_rows, num_vines_per_row, filename, method, build_heat_maps, desired_moisture )
+function [ vertex_table, edge_list, dist_list, rewards, reward_map, row_distance, vine_distance ] = build_vineyard_graph( vine1_lat, vine1_long, vineEnd_lat, vineEnd_long, num_rows, num_vines_per_row, filename, method, build_heat_maps, desired_moisture, reward_function, pad_rows )
 %BUILD_VINEYARD_GRAPH Builds a graph using vineyard data
 %
-%	Version: 1.0
-%	Date: 09/03/2017
+%	Version: 1.1
+%	Date: 03/16/2021
 %	Author: Thomas Thayer (tthayer@ucmerced.edu)
 %
 %	This function takes soil moisture data from a vineyard and interpolates it to create a graph with vertex rewards.
 %	Assumptions:
-%		Reward values are calculated as R = abs(desired_moisture - interpolated_moisture)
 %		The vineyard is rectangular, such that every row has the same number of vines within it.
+%		The vine rows are aligned with the UTM grid
 %		There are no missing vines within the vineyard (the reward for such vines can be set to 0 after this function returns).
 %		Vine rows are equally spaced, and each vine within a row is equally spaced.
 %	Inputs:
@@ -23,6 +23,10 @@ function [ vertex_table, edge_list, dist_list, rewards, reward_map, row_distance
 %		method: The interpolation method for calculating moisture values of vines not directly measured, which may be either 'nearest_nearest' or 'linear_nearest'
 %		build_heat_maps: A boolean defining whether to build a visual heat map of the vineyard
 %		desired_moisture: A constant for the desired moisture level of the entire vineyard
+%		reward_function: An integer denoting which reward function to use
+%			reward_function = 1: R = abs(desired_moisture - interpolated_moisture)
+%			reward_function = 2: R = desired_moisture - interpolated_moisture
+%		pad_ends: A boolean defining whether or not to create an additional vertex with zero reward on each end of every row, such that num_vines_per_row is increased by 2
 %	Outputs:
 %		vertex_table: A table of vertices in the graph containing the following data
 %			Vertex | x | y | utm_N | utm_E | utm_Zone | Latitude | Longitude | Moisture | Rewards
@@ -34,7 +38,7 @@ function [ vertex_table, edge_list, dist_list, rewards, reward_map, row_distance
 %		row_distance: The distance between each row of vines
 %		vine_distance: The distance between each vine in the rows
 
-    %% Define spacing of vines if needed
+    %% Define spacing of vines
     [vine1_utm_n, vine1_utm_e, vine1_utm_zone] = deg2utm(vine1_lat, vine1_long);
     [vineEnd_utm_n, vineEnd_utm_e, vineEnd_utm_zone] = deg2utm(vineEnd_lat, vineEnd_long);
     if vine1_utm_zone ~= vineEnd_utm_zone
@@ -43,17 +47,37 @@ function [ vertex_table, edge_list, dist_list, rewards, reward_map, row_distance
     end
     row_dist = (vineEnd_utm_e - vine1_utm_e) / num_rows;
     vine_dist = (vineEnd_utm_n - vine1_utm_n) / num_vines_per_row;
+	if ~exist('pad_rows')
+		pad_rows = 0;
+	end
+	if pad_rows == 1
+		[vine1_lat, vine1_long] = utm2deg(vine1_utm_n - vine_dist, vine1_utm_e, vine1_utm_zone);
+		[vineEnd_lat, vineEnd_long] = utm2deg(vineEnd_utm_n + vine_dist, vineEnd_utm_e, vineEnd_utm_zone);
+		num_vines_per_row = num_vines_per_row + 2;
+		[vine1_utm_n, vine1_utm_e, vine1_utm_zone] = deg2utm(vine1_lat, vine1_long);
+		[vineEnd_utm_n, vineEnd_utm_e, vineEnd_utm_zone] = deg2utm(vineEnd_lat, vineEnd_long);
+		if vine1_utm_zone ~= vineEnd_utm_zone
+			'UTM Zones do not match. Ending script...'
+			return;
+		end
+		row_dist = (vineEnd_utm_e - vine1_utm_e) / num_rows;
+		vine_dist = (vineEnd_utm_n - vine1_utm_n) / num_vines_per_row;
+	end
 
     %% Build xy map
     nVertex = num_rows * num_vines_per_row;
     vertex = [1:nVertex]';
     x = zeros(size(vertex));
     y = zeros(size(vertex));
+	padding = zeros(nVertex, 1);
     for i=1:num_rows
         for j=1:num_vines_per_row
             n = num_vines_per_row*(i-1)+j;
             x((i-1)*num_vines_per_row+j) = (j-1)*vine_dist; %x
             y((i-1)*num_vines_per_row+j) = (i-1)*row_dist; %y
+			if (j==1 || j==num_vines_per_row) && (pad_rows == 1)
+				padding(n) = 1;
+			end
         end
     end
     [vine1_utm_n, vine1_utm_e, vine1_utm_zone] = deg2utm(vine1_lat, vine1_long);
@@ -109,14 +133,20 @@ function [ vertex_table, edge_list, dist_list, rewards, reward_map, row_distance
         moisture_funct.Method = 'linear';
         moisture_funct.ExtrapolationMethod = 'nearest';
     else
-        "Only 'nearest_nearest' and 'linear_nearest' are valid methods. Defaulting to linear_nearest."
+        warning("Only 'nearest_nearest' and 'linear_nearest' are valid methods. Defaulting to linear_nearest.");
         moisture_funct.Method = 'linear';
         moisture_funct.ExtrapolationMethod = 'nearest';
     end
     vertex_table.Moisture = moisture_funct(vertex_table.Latitude, vertex_table.Longitude);
 
     %% Build rewards
-    vertex_table.Rewards = abs(desired_moisture - vertex_table.Moisture);
+	if reward_function == 1
+		vertex_table.Rewards = (1-padding) .* abs(desired_moisture - vertex_table.Moisture);
+	elseif reward_function == 2
+		vertex_table.Rewards = (1-padding) .* (desired_moisture - vertex_table.Moisture);
+	else
+		error('Reward function not selected.');
+	end
     rewards = vertex_table.Rewards';
 
     %% Build heat maps

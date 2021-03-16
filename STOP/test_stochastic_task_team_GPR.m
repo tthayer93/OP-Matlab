@@ -1,3 +1,11 @@
+%test_stochastic_task_team_GPR Run the modified team GPR algorithm on a stochastic task allocation problem
+%
+%	Version: 1.0
+%	Date: 12/17/2020
+%	Author: Thomas Thayer (tthayer@ucmerced.edu)
+%
+%	This script showcases modified version of the team Greedy Partial Row (GPR) algorithm for the stochastic task allocation problem, on vineyard datasets or randomized datasets, presented in "Task Planning on Stochastic Aisle Graphs for Precision Agriculture" by Kan, Thayer, Carpin, and Karydis.
+
 %% Initialize
 clear all;
 close all hidden;

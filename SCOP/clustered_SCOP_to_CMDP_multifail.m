@@ -5,7 +5,7 @@ function [states, state_transition_table, initial_state_distribution, absorbing_
 %	Date: 05/11/19
 %	Author: Thomas Thayer (tthayer@ucmerced.edu)
 %
-%	This function creates a Constrained Markov Decision Process (CMDP) formulation from a clustered Stochastic Cost Orienteering Problem (SCOP) that has been solved in expectation as an ordinary Orienteering Problem.
+%	This function creates a Constrained Markov Decision Process (CMDP) formulation from a clustered Stochastic Cost Orienteering Problem (SCOP) that has been solved in expectation as an ordinary Orienteering Problem. First used in https://ieeexplore.ieee.org/abstract/document/9340899
 %	Assumptions:
 %		The clustered SCOP starts at clustered vertex 1 at time 0.
 %		The goal is at clustered vertex N.

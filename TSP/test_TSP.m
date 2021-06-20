@@ -9,13 +9,14 @@
 %% Initialize
 clear all;
 close all hidden;
-%rng(1);
+rng(1);
 addpath(genpath('~/Sync/Grad_School/Code'));
 warning('off','all');
 %% Parameters
-n_vertex = 25
+n_vertex = 3
 symmetric = 0;
-use_usa = 0;
+use_usa = 1;
+linewidth = 2;
 %% Load data for continental USA
 if use_usa
 	load('usborder.mat','x','y','xx','yy');
@@ -33,10 +34,10 @@ if use_usa
 			n = n+1;
 		end
 	end
-	plot(x,y,'Color','red'); % draw the outside border
+	plot(x,y,'Color','red', LineWidth=linewidth); % draw the outside border
 	hold on
 	% Add the stops to the map
-	plot(stopsLon,stopsLat,'*b')
+	plot(stopsLon,stopsLat,'*b');
 	hold off
 	xy = [stopsLon, stopsLat];
 else
@@ -63,11 +64,14 @@ edge_list(idxs, :) = [];
 %% Solve with intlinprog
 tic
 [tour, total_cost] = solve_TSP(edge_list, symmetric);
+%[tour, total_reward, total_cost] = solve_OP(edge_list, ones(1, n_vertex), total_cost/2, 1, 1);
 toc
 %% Plot
 hold on;
-scatter(xy(:, 1), xy(:, 2), '*');
+scatter(xy(:, 1), xy(:, 2), 100*linewidth, 'b*', 'LineWidth', linewidth);
 for i=1:length(tour)-1
-	quiver(xy(tour(i), 1),xy(tour(i), 2),xy(tour(i+1), 1)-xy(tour(i), 1),xy(tour(i+1), 2)-xy(tour(i), 2),1,'color',[0,0,1]);
+	quiver(xy(tour(i), 1),xy(tour(i), 2),xy(tour(i+1), 1)-xy(tour(i), 1),xy(tour(i+1), 2)-xy(tour(i), 2),1,'color',[0,0,1], LineWidth=linewidth);
 end
-quiver(xy(tour(end), 1),xy(tour(end), 2),xy(tour(1), 1)-xy(tour(end), 1),xy(tour(1), 2)-xy(tour(end), 2),1,'color',[0,0,1]);
+quiver(xy(tour(end), 1),xy(tour(end), 2),xy(tour(1), 1)-xy(tour(end), 1),xy(tour(1), 2)-xy(tour(end), 2),1,'color',[0,0,1], LineWidth=linewidth);
+ax = gca;
+ax.LineWidth = linewidth

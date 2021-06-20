@@ -25,6 +25,7 @@ function [ tour_best, reward_best, cost_best ] = S_Algorithm_heuristic( edge_lis
 
     %% Initialize
 	reward_list = [[1:length(vertex_rewards)]', vertex_rewards(:)]; %quick fix
+	dist_list = edge_list(:, 3); %quick fix 2
     nVertex = max(reward_list(:, 1));
     if nargin < 10
         allow_revisit = 0;
